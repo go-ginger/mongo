@@ -133,11 +133,30 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 		}
 	}()
 	collection := db.GetCollection(req.Model)
-	err = collection.FindOne(*db.Context, filter).Decode(req.Model)
+	var limit int64 = 1
+	cur, err := collection.Find(*db.Context, filter, &options.FindOptions{
+		Limit: &limit,
+	})
 	if err != nil {
 		err = errors.HandleError(err)
 		return
 	}
-
-	return req.Model, nil
+	found := false
+	for cur.Next(*db.Context) {
+		err = cur.Decode(req.Model)
+		if err != nil {
+			return
+		}
+		found = true
+	}
+	if err = cur.Err(); err != nil {
+		err = errors.HandleError(err)
+		return
+	}
+	if !found {
+		err = errors.GetNotFoundError()
+		return
+	}
+	result = req.Model
+	return
 }
