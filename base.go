@@ -9,10 +9,10 @@ import (
 type BaseModel struct {
 	models.BaseModel `bson:"-" json:"-"`
 
-	ID        interface{} `bson:"_id" json:"id,omitempty"`
-	CreatedAt time.Time   `bson:"created_at" json:"created_at,omitempty"`
-	UpdatedAt time.Time   `bson:"updated_at" json:"updated_at,omitempty"`
-	DeletedAt *time.Time  `bson:"deleted_at" json:"deleted_at,omitempty"`
+	ID        *primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	CreatedAt time.Time           `bson:"created_at,omitempty" json:"created_at,omitempty"`
+	UpdatedAt time.Time           `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
+	DeletedAt *time.Time          `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 func (base *BaseModel) updateFromBase() {
@@ -37,5 +37,6 @@ func (base *BaseModel) HandleDeleteDefaultValues() {
 }
 
 func (base *BaseModel) SetID(id interface{}) {
-	base.ID = id.(primitive.ObjectID)
+	oid := id.(primitive.ObjectID)
+	base.ID = &oid
 }
