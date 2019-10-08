@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"fmt"
+	"github.com/go-ginger/helpers"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,11 +50,24 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	var totalCount uint64
 	collection := db.GetCollection(req.Models)
 	go handler.countDocuments(db, collection, filter, done, &totalCount)
-	cur, err := collection.Find(*db.Context, *filter,
-		&options.FindOptions{
-			Skip:  &offset,
-			Limit: &limit,
-		})
+	findOptions := &options.FindOptions{
+		Skip:  &offset,
+		Limit: &limit,
+	}
+	if req.Sort != nil {
+		sort := bson.D{}
+		for _, s := range *req.Sort {
+			order := 1
+			if s.Ascending {
+				order = 1
+			} else {
+				order = -1
+			}
+			sort = append(sort, bson.E{Key: s.Name, Value: order})
+		}
+		findOptions.SetSort(sort)
+	}
+	cur, err := collection.Find(*db.Context, *filter, findOptions)
 	if err != nil {
 		return
 	}
@@ -65,11 +79,13 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	}()
 	queryResult := make([]interface{}, 0)
 	for cur.Next(*db.Context) {
-		err = cur.Decode(req.Model)
+		var model interface{} = req.Model
+		model = helpers.New(model)
+		err = cur.Decode(model)
 		if err != nil {
 			return
 		}
-		queryResult = append(queryResult, req.Model)
+		queryResult = append(queryResult, model)
 	}
 	if err = cur.Err(); err != nil {
 		return
