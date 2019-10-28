@@ -3,6 +3,7 @@ package mongo
 import (
 	"bytes"
 	"github.com/go-ginger/dl"
+	"github.com/jinzhu/inflection"
 	"reflect"
 	"strings"
 )
@@ -19,7 +20,7 @@ func getCollectionName(value interface{}) string {
 	for reflectType.Kind() == reflect.Slice || reflectType.Kind() == reflect.Ptr {
 		reflectType = reflectType.Elem()
 	}
-	return defaultNamer(reflectType.Name())
+	return inflection.Plural(defaultNamer(reflectType.Name()))
 }
 
 func defaultNamer(name string) string {
