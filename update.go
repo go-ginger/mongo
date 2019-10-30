@@ -1,7 +1,6 @@
 package mongo
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
@@ -29,17 +28,17 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	filter := bson.D{
 		{Key: "_id", Value: id},
 	}
-	bytes, err := json.Marshal(req.Body)
+	var doc *bson.D
+	data, err := bson.Marshal(req.Body)
 	if err != nil {
 		return err
 	}
-	var m map[string]interface{}
-	err = json.Unmarshal(bytes, &m)
-	if err != nil {
-		return err
-	}
-	update := map[string]interface{}{
-		"$set": m,
+	err = bson.Unmarshal(data, &doc)
+	update := bson.D{
+		bson.E{
+			Key:   "$set",
+			Value: doc,
+		},
 	}
 	result, err := collection.UpdateOne(*db.Context, filter, update)
 	if err != nil {
