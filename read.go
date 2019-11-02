@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"fmt"
-	"github.com/go-ginger/helpers"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,7 +47,8 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 
 	done := make(chan bool, 1)
 	var totalCount uint64
-	collection := db.GetCollection(req.Models)
+	ms := handler.GetModelsInstance()
+	collection := db.GetCollection(ms)
 	go handler.countDocuments(db, collection, filter, done, &totalCount)
 	findOptions := &options.FindOptions{
 		Skip:  &offset,
@@ -79,8 +79,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	}()
 	queryResult := make([]interface{}, 0)
 	for cur.Next(*db.Context) {
-		var model interface{} = req.Model
-		model = helpers.New(model)
+		model := handler.GetModelInstance()
 		err = cur.Decode(model)
 		if err != nil {
 			return
@@ -132,7 +131,8 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 			err = e
 		}
 	}()
-	collection := db.GetCollection(req.Model)
+	model := handler.GetModelInstance()
+	collection := db.GetCollection(model)
 	var limit int64 = 1
 	cur, err := collection.Find(*db.Context, filter, &options.FindOptions{
 		Limit: &limit,
@@ -143,7 +143,7 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	}
 	found := false
 	for cur.Next(*db.Context) {
-		err = cur.Decode(req.Model)
+		err = cur.Decode(model)
 		if err != nil {
 			return
 		}
@@ -157,6 +157,6 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 		err = errors.GetNotFoundError()
 		return
 	}
-	result = req.Model
+	result = model.(models.IBaseModel)
 	return
 }

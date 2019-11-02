@@ -20,7 +20,8 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 		}
 	}()
 	req := request.GetBaseRequest()
-	collection := db.GetCollection(req.Model)
+	model := handler.GetModelInstance()
+	collection := db.GetCollection(model)
 	id, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
 	if err != nil {
 		return errors.HandleError(err)
