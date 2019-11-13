@@ -47,7 +47,7 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 	if err != nil {
 		return errors.HandleError(err)
 	}
-	if result.MatchedCount == 0 {
+	if result.ModifiedCount == 0 && result.UpsertedCount == 0 {
 		return errors.GetError(errors.NotFoundError)
 	}
 	return handler.BaseDbHandler.Upsert(request)
