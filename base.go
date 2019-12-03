@@ -10,7 +10,7 @@ type BaseModel struct {
 	models.BaseModel `bson:"-" json:"-"`
 
 	ID        *primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	CreatedAt time.Time           `bson:"created_at,omitempty" json:"created_at,omitempty"`
+	CreatedAt time.Time           `bson:"created_at,omitempty" json:"created_at,omitempty" mongo:"insert_only"`
 	UpdatedAt time.Time           `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
 	DeletedAt *time.Time          `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }

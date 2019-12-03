@@ -26,7 +26,7 @@ func (db *DB) GetCollection(model interface{}) *mongo.Collection {
 }
 
 func GetDb() (db *DB, err error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(config.ConnectionString))
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.ConnectionString), )
 	if err != nil {
 		return
 	}
