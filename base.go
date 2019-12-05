@@ -31,6 +31,11 @@ func (base *BaseModel) HandleUpdateDefaultValues() {
 	base.updateFromBase()
 }
 
+func (base *BaseModel) HandleUpsertDefaultValues() {
+	base.CreatedAt = time.Now().UTC()
+	base.UpdatedAt = time.Now().UTC()
+}
+
 func (base *BaseModel) HandleDeleteDefaultValues() {
 	base.BaseModel.HandleDeleteDefaultValues()
 	base.updateFromBase()
