@@ -59,13 +59,15 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
-	var filter *bson.D
+	var filter *bson.M
 	if req.Filters != nil {
 		var f map[string]interface{} = *req.Filters
 		filter, err = getBsonDocument(&f)
-	} else {
-		filter = &bson.D{}
 	}
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	improveFilter(filter)
 	onlyInsertFields := handler.getInsertOnlyFields(req.Body)
 	doc := make([]bson.E, 0)
 	setInsert := make([]bson.E, 0)

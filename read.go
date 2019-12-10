@@ -11,7 +11,7 @@ import (
 	"math"
 )
 
-func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, filter *bson.D,
+func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, filter *bson.M,
 	done chan bool, count *uint64, opts ...*options.CountOptions) {
 	total, err := collection.CountDocuments(*db.Context, filter, opts...)
 	if err != nil {
@@ -35,13 +35,15 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	}()
 	req := request.GetBaseRequest()
 
-	var filter *bson.D
+	var filter *bson.M
 	if req.Filters != nil {
 		var f map[string]interface{} = *req.Filters
 		filter, err = getBsonDocument(&f)
-	} else {
-		filter = &bson.D{}
 	}
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	improveFilter(filter)
 	offset := int64((req.Page - 1) * req.PerPage)
 	limit := int64(req.PerPage)
 
@@ -106,21 +108,23 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel, err error) {
 	req := request.GetBaseRequest()
 
-	var filter *bson.D
+	var filter *bson.M
 	if req.Filters != nil {
 		var f map[string]interface{} = *req.Filters
+		filter = &bson.M{}
 		if id, ok := f["id"]; ok {
 			delete(f, "id")
 			_id, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", id))
 			if err != nil {
 				return nil, errors.HandleError(err)
 			}
-			f["_id"] = _id
+			(*filter)["_id"] = _id
 		}
-		filter, err = getBsonDocument(&f)
-	} else {
-		filter = &bson.D{}
 	}
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	improveFilter(filter)
 	db, err := GetDb()
 	if err != nil {
 		return

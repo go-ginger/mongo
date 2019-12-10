@@ -26,20 +26,18 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	if err != nil {
 		return errors.HandleError(err)
 	}
-	filter := bson.D{
-		{Key: "_id", Value: id},
+	filter := bson.M{
+		"_id": id,
 	}
+	improveFilter(&filter)
 	var doc *bson.D
 	data, err := bson.Marshal(req.Body)
 	if err != nil {
 		return err
 	}
 	err = bson.Unmarshal(data, &doc)
-	update := bson.D{
-		bson.E{
-			Key:   "$set",
-			Value: doc,
-		},
+	update := bson.M{
+		"$set": doc,
 	}
 	result, err := collection.UpdateOne(*db.Context, filter, update)
 	if err != nil {
