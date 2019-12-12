@@ -22,9 +22,20 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
-	id, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
-	if err != nil {
-		return errors.HandleError(err)
+	var id primitive.ObjectID
+	objIDPtr, ok := req.ID.(*primitive.ObjectID)
+	if ok {
+		id = *objIDPtr
+	} else {
+		objID, ok := req.ID.(primitive.ObjectID)
+		if ok {
+			id = objID
+		} else {
+			id, err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
+			if err != nil {
+				return errors.HandleError(err)
+			}
+		}
 	}
 	filter := bson.M{
 		"_id": id,
