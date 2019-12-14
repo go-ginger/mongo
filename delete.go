@@ -31,7 +31,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 		"_id": id,
 	}
 	if config.SetFlagOnDelete {
-		improveFilter(&filter)
+		improveFilter(&filter, nil)
 		update := bson.M{
 			"$set": &bson.M{
 				"deleted": true,

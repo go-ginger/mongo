@@ -67,7 +67,9 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 	if filter == nil {
 		filter = &bson.M{}
 	}
-	improveFilter(filter)
+	improveFilter(filter, &improveFilterOptions{
+		IgnoreDeletedFilter: true,
+	})
 	onlyInsertFields := handler.getInsertOnlyFields(req.Body)
 	doc := make([]bson.E, 0)
 	setInsert := make([]bson.E, 0)

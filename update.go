@@ -24,7 +24,7 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	collection := db.GetCollection(model)
 	var id primitive.ObjectID
 	objIDPtr, ok := req.ID.(*primitive.ObjectID)
-	if ok {
+	if ok && objIDPtr != nil {
 		id = *objIDPtr
 	} else {
 		objID, ok := req.ID.(primitive.ObjectID)
@@ -40,7 +40,7 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	filter := bson.M{
 		"_id": id,
 	}
-	improveFilter(&filter)
+	improveFilter(&filter, nil)
 	var doc *bson.D
 	data, err := bson.Marshal(req.Body)
 	if err != nil {

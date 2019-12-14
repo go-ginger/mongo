@@ -26,8 +26,14 @@ func getBsonDocument(filters *map[string]interface{}) (result *bson.M, err error
 	return
 }
 
-func improveFilter(filter *bson.M) {
-	if config.SetFlagOnDelete {
-		(*filter)["deleted"] = bson.M{"$ne": true}
+type improveFilterOptions struct {
+	IgnoreDeletedFilter bool
+}
+
+func improveFilter(filter *bson.M, deketeOptions *improveFilterOptions) {
+	if deketeOptions == nil || !deketeOptions.IgnoreDeletedFilter {
+		if config.SetFlagOnDelete {
+			(*filter)["deleted"] = bson.M{"$ne": true}
+		}
 	}
 }

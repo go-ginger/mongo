@@ -43,7 +43,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	if filter == nil {
 		filter = &bson.M{}
 	}
-	improveFilter(filter)
+	improveFilter(filter, nil)
 	offset := int64((req.Page - 1) * req.PerPage)
 	limit := int64(req.PerPage)
 
@@ -124,7 +124,7 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	if filter == nil {
 		filter = &bson.M{}
 	}
-	improveFilter(filter)
+	improveFilter(filter, nil)
 	db, err := GetDb()
 	if err != nil {
 		return
