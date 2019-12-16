@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"fmt"
+	"github.com/go-ginger/helpers"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,6 +23,61 @@ func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, f
 	done <- true
 }
 
+func (handler *DbHandler) ImproveIDFilter(value interface{}) (result interface{}, err error) {
+	result = value
+	filters, ok := value.(*models.Filters)
+	if ok {
+		for k, v := range *filters {
+			strV, ok := v.(string)
+			if ok {
+				(*filters)[k], err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", strV))
+				if err != nil {
+					return
+				}
+				return
+			}
+			strsV, ok := v.([]string)
+			if ok {
+				ids := make([]primitive.ObjectID, 0)
+				for _, str := range strsV {
+					id, e := primitive.ObjectIDFromHex(fmt.Sprintf("%v", str))
+					if e != nil {
+						err = e
+						return
+					}
+					ids = append(ids, id)
+				}
+				(*filters)[k] = ids
+				return
+			}
+			filtersV, ok := v.(*models.Filters)
+			if ok {
+				return handler.ImproveIDFilter(filtersV)
+			}
+		}
+		return
+	}
+	strValue, ok := value.(string)
+	if ok {
+		result, err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", strValue))
+		return
+	}
+	return
+}
+
+func (handler *DbHandler) NormalizeFilter(filters *models.Filters) (err error) {
+	if id, ok := (*filters)["id"]; ok {
+		delete(*filters, "id")
+		result, e := handler.ImproveIDFilter(id)
+		if e != nil {
+			err = e
+			return
+		}
+		(*filters)["_id"] = result
+	}
+	return
+}
+
 func (handler *DbHandler) Paginate(request models.IRequest) (result *models.PaginateResult, err error) {
 	db, err := GetDb()
 	if err != nil {
@@ -37,6 +93,10 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 
 	var filter *bson.M
 	if req.Filters != nil {
+		err = handler.NormalizeFilter(req.Filters)
+		if err != nil {
+			return
+		}
 		var f map[string]interface{} = *req.Filters
 		filter, err = getBsonDocument(&f)
 	}
@@ -79,14 +139,14 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 			err = e
 		}
 	}()
-	queryResult := make([]interface{}, 0)
+	queryResult := handler.GetModelsInstance()
 	for cur.Next(*db.Context) {
 		model := handler.GetModelInstance()
 		err = cur.Decode(model)
 		if err != nil {
 			return
 		}
-		queryResult = append(queryResult, model)
+		queryResult = helpers.AppendToSlice(queryResult, model)
 	}
 	if err = cur.Err(); err != nil {
 		return
@@ -110,16 +170,12 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 
 	var filter *bson.M
 	if req.Filters != nil {
-		var f map[string]interface{} = *req.Filters
-		filter = &bson.M{}
-		if id, ok := f["id"]; ok {
-			delete(f, "id")
-			_id, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", id))
-			if err != nil {
-				return nil, errors.HandleError(err)
-			}
-			(*filter)["_id"] = _id
+		err = handler.NormalizeFilter(req.Filters)
+		if err != nil {
+			return
 		}
+		var f map[string]interface{} = *req.Filters
+		filter, err = getBsonDocument(&f)
 	}
 	if filter == nil {
 		filter = &bson.M{}
