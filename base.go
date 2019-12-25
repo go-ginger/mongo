@@ -41,6 +41,14 @@ func (base *BaseModel) HandleDeleteDefaultValues() {
 	base.updateFromBase()
 }
 
+func (base *BaseModel) GetID() interface{} {
+	return base.ID
+}
+
+func (base *BaseModel) GetIDString() string {
+	return base.ID.Hex()
+}
+
 func (base *BaseModel) SetID(id interface{}) {
 	oid := id.(primitive.ObjectID)
 	base.ID = &oid
