@@ -42,13 +42,22 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	}
 	improveFilter(&filter, nil)
 	var doc *bson.D
-	data, err := bson.Marshal(req.Body)
+	var body interface{} = req.Body
+	if body == nil {
+		body = req.ExtraQuery
+	}
+	data, err := bson.Marshal(body)
 	if err != nil {
 		return err
 	}
 	err = bson.Unmarshal(data, &doc)
-	update := bson.M{
-		"$set": doc,
+	var update interface{}
+	if req.Body != nil {
+		update = bson.M{
+			"$set": doc,
+		}
+	} else {
+		update = doc
 	}
 	result, err := collection.UpdateOne(*db.Context, filter, update)
 	if err != nil {

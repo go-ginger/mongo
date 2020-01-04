@@ -23,18 +23,23 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
-	id, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
+	var id primitive.ObjectID
+	if idPtr, ok := req.ID.(*primitive.ObjectID); ok {
+		id = *idPtr
+	} else {
+		id, err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
+	}
 	if err != nil {
 		return errors.HandleError(err)
 	}
 	filter := bson.M{
 		"_id": id,
 	}
-	if config.SetFlagOnDelete {
+	if config.SetFlagOnDelete && *handler.SetFlagOnDelete {
 		improveFilter(&filter, nil)
 		update := bson.M{
 			"$set": &bson.M{
-				"deleted": true,
+				"deleted":    true,
 				"deleted_at": time.Now().UTC(),
 			},
 		}
