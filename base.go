@@ -46,7 +46,10 @@ func (base *BaseModel) GetID() interface{} {
 }
 
 func (base *BaseModel) GetIDString() string {
-	return base.ID.Hex()
+	if base.ID != nil {
+		return base.ID.Hex()
+	}
+	return ""
 }
 
 func (base *BaseModel) SetID(id interface{}) {

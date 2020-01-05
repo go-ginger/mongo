@@ -3,9 +3,9 @@ module github.com/go-ginger/mongo
 go 1.12
 
 require (
-	github.com/go-ginger/dl v0.0.3
+	github.com/go-ginger/dl v0.1.0
 	github.com/go-ginger/helpers v0.0.0
-	github.com/go-ginger/models v0.0.0
+	github.com/go-ginger/models v0.0.4
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0
