@@ -48,7 +48,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 			return errors.HandleError(err)
 		}
 		if result.MatchedCount == 0 {
-			return errors.GetError(errors.NotFoundError)
+			return errors.GetError(request, errors.NotFoundError)
 		}
 	} else {
 		result, err := collection.DeleteOne(*db.Context, filter)
@@ -56,7 +56,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 			return errors.HandleError(err)
 		}
 		if result.DeletedCount == 0 {
-			return errors.GetError(errors.NotFoundError)
+			return errors.GetError(request, errors.NotFoundError)
 		}
 	}
 	return handler.BaseDbHandler.Delete(request)

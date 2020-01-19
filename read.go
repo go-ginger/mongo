@@ -214,7 +214,7 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 		return
 	}
 	if !found {
-		err = errors.GetNotFoundError()
+		err = errors.GetNotFoundError(request)
 		return
 	}
 	result = model.(models.IBaseModel)

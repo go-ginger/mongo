@@ -64,7 +64,7 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 		return errors.HandleError(err)
 	}
 	if result.MatchedCount == 0 {
-		return errors.GetError(errors.NotFoundError)
+		return errors.GetError(request, errors.NotFoundError)
 	}
 	return handler.BaseDbHandler.Update(request)
 }
