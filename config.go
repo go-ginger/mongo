@@ -20,13 +20,20 @@ var config Config
 func InitializeConfig(input interface{}) {
 	v := reflect.Indirect(reflect.ValueOf(input))
 	connectionString := v.FieldByName("MongoConnectionString")
+	if !connectionString.IsValid() {
+		panic("invalid mongo connection string")
+	}
 	databaseName := v.FieldByName("MongoDatabaseName")
-	setFlagOnDelete := v.FieldByName("SetFlagOnDelete")
+	setFlagOnDeleteV := v.FieldByName("SetFlagOnDelete")
+	setFlagOnDelete := false
+	if setFlagOnDeleteV.IsValid() {
+		setFlagOnDelete = setFlagOnDeleteV.Bool()
+	}
 
 	config = Config{
 		ConnectionString: connectionString.String(),
 		DatabaseName:     databaseName.String(),
 		CollectionNamer:  getCollectionName,
-		SetFlagOnDelete:  setFlagOnDelete.Bool(),
+		SetFlagOnDelete:  setFlagOnDelete,
 	}
 }
