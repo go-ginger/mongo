@@ -11,7 +11,7 @@ type BaseModel struct {
 
 	ID        *primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	CreatedAt time.Time           `bson:"created_at,omitempty" json:"created_at,omitempty" mongo:"insert_only"`
-	UpdatedAt *time.Time           `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
+	UpdatedAt *time.Time          `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
 	DeletedAt *time.Time          `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
@@ -32,8 +32,9 @@ func (base *BaseModel) HandleUpdateDefaultValues() {
 }
 
 func (base *BaseModel) HandleUpsertDefaultValues() {
+	now := time.Now().UTC()
 	base.CreatedAt = time.Now().UTC()
-	base.UpdatedAt = time.Now().UTC()
+	base.UpdatedAt = &now
 }
 
 func (base *BaseModel) HandleDeleteDefaultValues() {

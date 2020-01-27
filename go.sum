@@ -9,8 +9,8 @@ github.com/go-ginger/dl v0.1.0/go.mod h1:DYxLxSsHjrhaupdG4I003TMgKE3ag27ibv+ciQm
 github.com/go-ginger/helpers v0.0.0 h1:FnKs/BEuOyobnI9wAb/26TRG1hLW/e9fY1KtG6UMiP4=
 github.com/go-ginger/helpers v0.0.0/go.mod h1:Gsu1X7KIpaCt3Pj7sVoAFulEWwUQiwecyhQgdhhwCmc=
 github.com/go-ginger/models v0.0.4/go.mod h1:I1EqNLmqnooeA0m76xGWAYRaYZze3LaI/u92/sigb4g=
-github.com/go-ginger/models v0.2.0 h1:xdbzUMxwxPfVsvJT3TJNWg0BEJNYOg4pqh6bZSekcXk=
-github.com/go-ginger/models v0.2.0/go.mod h1:fXUN2LwJlSG2/4TwYXzNfICKlQqsAeEd4NAvHbPgAzg=
+github.com/go-ginger/models v0.3.3 h1:AooO3VKwKSttPtXQamFQmDepIfwfuexT4CEf9uisggg=
+github.com/go-ginger/models v0.3.3/go.mod h1:fXUN2LwJlSG2/4TwYXzNfICKlQqsAeEd4NAvHbPgAzg=
 github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg=
