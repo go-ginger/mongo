@@ -16,9 +16,15 @@ type BaseModel struct {
 }
 
 func (base *BaseModel) updateFromBase() {
-	base.CreatedAt = base.BaseModel.CreatedAt
-	base.UpdatedAt = base.BaseModel.UpdatedAt
-	base.DeletedAt = base.BaseModel.DeletedAt
+	if !base.BaseModel.CreatedAt.IsZero() {
+		base.CreatedAt = base.BaseModel.CreatedAt
+	}
+	if base.BaseModel.UpdatedAt != nil {
+		base.UpdatedAt = base.BaseModel.UpdatedAt
+	}
+	if base.BaseModel.DeletedAt != nil {
+		base.DeletedAt = base.BaseModel.DeletedAt
+	}
 }
 
 func (base *BaseModel) HandleCreateDefaultValues() {
