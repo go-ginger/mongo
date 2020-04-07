@@ -12,10 +12,19 @@ type DbHandler struct {
 	dl.BaseDbHandler
 }
 
+type iCustomName interface {
+	Name() string
+}
+
 var sMap = newSafeMap()
 
-
 func getCollectionName(value interface{}) string {
+	if cn, ok := value.(iCustomName); ok {
+		name := cn.Name()
+		if name != "" {
+			return name
+		}
+	}
 	reflectType := reflect.ValueOf(value).Type()
 	for reflectType.Kind() == reflect.Slice || reflectType.Kind() == reflect.Ptr {
 		reflectType = reflectType.Elem()
