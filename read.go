@@ -167,19 +167,19 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 
 func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel, err error) {
 	req := request.GetBaseRequest()
-
 	var filter *bson.M
-	if req.Filters != nil {
-		err = handler.NormalizeFilter(req.Filters)
-		if err != nil {
-			return
-		}
-		var f map[string]interface{} = *req.Filters
-		filter, err = getBsonDocument(&f)
+	if req.Filters == nil {
+		req.Filters = &models.Filters{}
 	}
-	if filter == nil {
-		filter = &bson.M{}
+	if req.ID != nil {
+		(*req.Filters)["id"] = req.ID
 	}
+	err = handler.NormalizeFilter(req.Filters)
+	if err != nil {
+		return
+	}
+	var f map[string]interface{} = *req.Filters
+	filter, err = getBsonDocument(&f)
 	improveFilter(filter, nil)
 	db, err := GetDb()
 	if err != nil {
