@@ -57,10 +57,15 @@ func (handler *DbHandler) ImproveIDFilter(value interface{}) (result interface{}
 		}
 		return
 	}
-	strValue, ok := value.(string)
-	if ok {
-		result, err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", strValue))
-		return
+
+	var strId string
+	if strValue, ok := value.(string); ok {
+		strId = fmt.Sprintf("%v", strValue)
+	} else if strValue, ok := value.(*string); ok {
+		strId = fmt.Sprintf("%v", *strValue)
+	}
+	if strId != "" {
+		result, err = primitive.ObjectIDFromHex(strId)
 	}
 	return
 }
