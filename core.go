@@ -4,12 +4,27 @@ import (
 	"bytes"
 	"github.com/go-ginger/dl"
 	"github.com/jinzhu/inflection"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"reflect"
 	"strings"
 )
 
 type DbHandler struct {
 	dl.BaseDbHandler
+}
+
+func (handler *DbHandler) IdEquals(id1 interface{}, id2 interface{}) bool {
+	if objId, ok := id1.(primitive.ObjectID); ok {
+		id1 = objId.Hex()
+	} else if objId, ok := id1.(*primitive.ObjectID); ok {
+		id1 = objId.Hex()
+	}
+	if objId, ok := id2.(primitive.ObjectID); ok {
+		id2 = objId.Hex()
+	} else if objId, ok := id2.(*primitive.ObjectID); ok {
+		id2 = objId.Hex()
+	}
+	return id1 == id2
 }
 
 type iCustomName interface {
