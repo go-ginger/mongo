@@ -37,10 +37,22 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 			}
 		}
 	}
-	filter := bson.M{
-		"_id": id,
+	var filter *bson.M
+	if req.Filters != nil {
+		err = handler.NormalizeFilter(req.Filters)
+		if err != nil {
+			return err
+		}
+		var f map[string]interface{} = *req.Filters
+		filter, err = getBsonDocument(&f)
 	}
-	improveFilter(&filter, nil)
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	if _, ok := (*filter)["_id"]; !ok {
+		(*filter)["_id"] = id
+	}
+	improveFilter(filter, nil)
 	var doc *bson.D
 	var body interface{} = req.Body
 	if body == nil {
