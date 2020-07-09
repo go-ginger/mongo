@@ -26,6 +26,14 @@ func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, f
 func (handler *DbHandler) ImproveIDFilter(value interface{}) (result interface{}, err error) {
 	result = value
 	filters, ok := value.(*models.Filters)
+	if !ok {
+		var filtersMap map[string]interface{}
+		filtersMap, ok = value.(map[string]interface{})
+		if ok {
+			f := models.Filters(filtersMap)
+			filters = &f
+		}
+	}
 	if ok {
 		for k, v := range *filters {
 			strV, ok := v.(string)
