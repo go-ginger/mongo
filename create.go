@@ -5,7 +5,7 @@ import (
 	"github.com/go-ginger/models/errors"
 )
 
-func (handler *DbHandler) Insert(request models.IRequest) (result interface{}, err error) {
+func (handler *DbHandler) Insert(request models.IRequest) (result models.IBaseModel, err error) {
 	req := request.GetBaseRequest()
 	db, err := GetDb()
 	if err != nil {
