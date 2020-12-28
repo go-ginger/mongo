@@ -1,11 +1,10 @@
 package mongo
 
 import (
-	"fmt"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -23,20 +22,21 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
-	var id primitive.ObjectID
-	if idPtr, ok := req.ID.(*primitive.ObjectID); ok {
-		id = *idPtr
-	} else {
-		id, err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", req.ID))
-	}
+	filter, err := getFilter(req)
 	if err != nil {
-		return errors.HandleError(err)
+		return err
 	}
-	filter := bson.M{
-		"_id": id,
+	if filter == nil {
+		return errors.GetInternalServiceError(request,
+			request.MustLocalize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "InvalidFilter",
+					Other: "invalid filter",
+				},
+			}))
 	}
 	if config.SetFlagOnDelete && *handler.SetFlagOnDelete {
-		improveFilter(&filter, nil)
+		improveFilter(filter, nil)
 		update := bson.M{
 			"$set": &bson.M{
 				"deleted":    true,

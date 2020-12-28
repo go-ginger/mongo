@@ -6,7 +6,6 @@ import (
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math"
@@ -24,71 +23,11 @@ func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, f
 }
 
 func (handler *DbHandler) ImproveIDFilter(value interface{}) (result interface{}, err error) {
-	result = value
-	filters, ok := value.(*models.Filters)
-	if !ok {
-		var filtersMap map[string]interface{}
-		filtersMap, ok = value.(map[string]interface{})
-		if ok {
-			f := models.Filters(filtersMap)
-			filters = &f
-		}
-	}
-	if ok {
-		for k, v := range *filters {
-			strV, ok := v.(string)
-			if ok {
-				(*filters)[k], err = primitive.ObjectIDFromHex(fmt.Sprintf("%v", strV))
-				if err != nil {
-					return
-				}
-				return
-			}
-			strsV, ok := v.([]string)
-			if ok {
-				ids := make([]primitive.ObjectID, 0)
-				for _, str := range strsV {
-					id, e := primitive.ObjectIDFromHex(fmt.Sprintf("%v", str))
-					if e != nil {
-						err = e
-						return
-					}
-					ids = append(ids, id)
-				}
-				(*filters)[k] = ids
-				return
-			}
-			filtersV, ok := v.(*models.Filters)
-			if ok {
-				return handler.ImproveIDFilter(filtersV)
-			}
-		}
-		return
-	}
-
-	var strId string
-	if strValue, ok := value.(string); ok {
-		strId = fmt.Sprintf("%v", strValue)
-	} else if strValue, ok := value.(*string); ok {
-		strId = fmt.Sprintf("%v", *strValue)
-	}
-	if strId != "" {
-		result, err = primitive.ObjectIDFromHex(strId)
-	}
-	return
+	return improveIDFilter(value)
 }
 
 func (handler *DbHandler) NormalizeFilter(filters *models.Filters) (err error) {
-	if id, ok := (*filters)["id"]; ok {
-		delete(*filters, "id")
-		result, e := handler.ImproveIDFilter(id)
-		if e != nil {
-			err = e
-			return
-		}
-		(*filters)["_id"] = result
-	}
-	return
+	return normalizeFilter(filters)
 }
 
 func (handler *DbHandler) Paginate(request models.IRequest) (result *models.PaginateResult, err error) {
