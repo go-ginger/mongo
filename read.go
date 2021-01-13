@@ -91,7 +91,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 			err = e
 		}
 	}()
-	queryResult := handler.GetModelsInstance()
+	queryResult := handler.GetModelsInstancePtr()
 	for cur.Next(*db.Context) {
 		model := handler.GetModelInstance()
 		err = cur.Decode(model)
