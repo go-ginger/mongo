@@ -233,3 +233,76 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	result = model.(models.IBaseModel)
 	return
 }
+
+func (handler *DbHandler) Exists(request models.IRequest) (exists bool, err error) {
+	db, err := GetDb()
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		e := db.Close()
+		if e != nil {
+			err = e
+		}
+	}()
+	req := request.GetBaseRequest()
+
+	var filter *bson.M
+	if req.Filters != nil {
+		err = handler.NormalizeFilter(req.Filters)
+		if err != nil {
+			return
+		}
+		var f map[string]interface{} = *req.Filters
+		filter, err = getBsonDocument(&f)
+	}
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	improveFilter(filter, nil)
+
+	done := make(chan bool, 1)
+	var totalCount uint64
+	ms := handler.GetModelsInstance()
+	collection := db.GetCollection(ms)
+	go handler.countDocuments(db, collection, filter, done, &totalCount)
+	<- done
+	exists = totalCount > 0
+	return
+}
+
+func (handler *DbHandler) Count(request models.IRequest) (count uint64, err error) {
+	db, err := GetDb()
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		e := db.Close()
+		if e != nil {
+			err = e
+		}
+	}()
+	req := request.GetBaseRequest()
+
+	var filter *bson.M
+	if req.Filters != nil {
+		err = handler.NormalizeFilter(req.Filters)
+		if err != nil {
+			return
+		}
+		var f map[string]interface{} = *req.Filters
+		filter, err = getBsonDocument(&f)
+	}
+	if filter == nil {
+		filter = &bson.M{}
+	}
+	improveFilter(filter, nil)
+
+	done := make(chan bool, 1)
+	ms := handler.GetModelsInstance()
+	collection := db.GetCollection(ms)
+	go handler.countDocuments(db, collection, filter, done, &count)
+	<- done
+
+	return
+}
