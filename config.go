@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"github.com/go-ginger/models"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 )
 
@@ -13,6 +14,7 @@ type Config struct {
 	DatabaseName     string
 	CollectionNamer  func(value interface{}) string
 	SetFlagOnDelete  bool
+	ClientOptions []*options.ClientOptions
 }
 
 var config Config

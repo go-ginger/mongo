@@ -12,6 +12,8 @@ type DB struct {
 	Context *context.Context
 }
 
+var currentDb *DB
+
 func (db *DB) Close() (err error) {
 	if db.Context == nil {
 		// database is not connected yet
@@ -26,7 +28,14 @@ func (db *DB) GetCollection(model interface{}) *mongo.Collection {
 }
 
 func GetDb() (db *DB, err error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(config.ConnectionString), )
+	if currentDb != nil {
+		return currentDb, nil
+	}
+	opts := []*options.ClientOptions{
+		options.Client().ApplyURI(config.ConnectionString),
+	}
+	opts = append(opts, config.ClientOptions...)
+	client, err := mongo.Connect(context.Background(), opts...)
 	if err != nil {
 		return
 	}
@@ -35,9 +44,9 @@ func GetDb() (db *DB, err error) {
 	if err != nil {
 		return
 	}
-	db = &DB{
+	currentDb = &DB{
 		Client:  client,
 		Context: &ctx,
 	}
-	return
+	return currentDb, nil
 }
