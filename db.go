@@ -4,7 +4,6 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 type DB struct {
@@ -35,12 +34,8 @@ func GetDb() (db *DB, err error) {
 		options.Client().ApplyURI(config.ConnectionString),
 	}
 	opts = append(opts, config.ClientOptions...)
-	client, err := mongo.Connect(context.Background(), opts...)
-	if err != nil {
-		return
-	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
+	ctx := context.TODO()
+	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		return
 	}

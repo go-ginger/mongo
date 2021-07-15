@@ -4,6 +4,7 @@ import (
 	"github.com/go-ginger/models"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
+	"time"
 )
 
 type Config struct {
@@ -14,7 +15,10 @@ type Config struct {
 	DatabaseName     string
 	CollectionNamer  func(value interface{}) string
 	SetFlagOnDelete  bool
-	ClientOptions []*options.ClientOptions
+	ClientOptions    []*options.ClientOptions
+
+	TimeoutMs int64
+	Timeout   time.Duration
 }
 
 var config Config
@@ -32,10 +36,21 @@ func InitializeConfig(input interface{}) {
 		setFlagOnDelete = setFlagOnDeleteV.Bool()
 	}
 
+	var timeoutMs int64
+	timeout := v.FieldByName("timeout")
+	if timeout.IsValid() {
+		timeoutMs = timeout.Int()
+	}
+	if timeoutMs == 0 {
+		timeoutMs = 5000
+	}
+
 	config = Config{
 		ConnectionString: connectionString.String(),
 		DatabaseName:     databaseName.String(),
 		CollectionNamer:  getCollectionName,
 		SetFlagOnDelete:  setFlagOnDelete,
+		TimeoutMs:        timeoutMs,
 	}
+	config.Timeout = time.Millisecond * time.Duration(config.TimeoutMs)
 }

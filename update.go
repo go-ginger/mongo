@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
@@ -13,12 +14,6 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		e := db.Close()
-		if e != nil {
-			err = e
-		}
-	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -71,7 +66,11 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 	} else {
 		update = doc
 	}
-	result, err := collection.UpdateOne(*db.Context, filter, update)
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
+	result, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.HandleError(err)
 	}

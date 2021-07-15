@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 )
@@ -11,14 +12,12 @@ func (handler *DbHandler) Insert(request models.IRequest) (result models.IBaseMo
 	if err != nil {
 		return
 	}
-	defer func() {
-		e := db.Close()
-		if e != nil {
-			err = e
-		}
-	}()
 	collection := db.GetCollection(req.Body)
-	res, err := collection.InsertOne(*db.Context, req.Body)
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
+	res, err := collection.InsertOne(ctx, req.Body)
 	if err != nil {
 		err = errors.HandleError(err)
 		return

@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -50,12 +51,6 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		e := db.Close()
-		if e != nil {
-			err = e
-		}
-	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -105,8 +100,12 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 			},
 		)
 	}
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
 	doUpsert := true
-	result, err := collection.UpdateMany(*db.Context, filter, upsert, &options.UpdateOptions{
+	result, err := collection.UpdateMany(ctx, filter, upsert, &options.UpdateOptions{
 		Upsert: &doUpsert,
 	})
 	if err != nil {

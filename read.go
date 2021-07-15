@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-ginger/helpers"
 	"github.com/go-ginger/models"
@@ -13,7 +14,11 @@ import (
 
 func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, filter *bson.M,
 	done chan bool, count *uint64, opts ...*options.CountOptions) {
-	total, err := collection.CountDocuments(*db.Context, filter, opts...)
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
+	total, err := collection.CountDocuments(ctx, filter, opts...)
 	if err != nil {
 		fmt.Println(fmt.Sprintf("error on count documents: %v", err))
 	}
@@ -35,12 +40,6 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		e := db.Close()
-		if e != nil {
-			err = e
-		}
-	}()
 	req := request.GetBaseRequest()
 
 	var filter *bson.M
@@ -81,12 +80,16 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 		}
 		findOptions.SetSort(sort)
 	}
-	cur, err := collection.Find(*db.Context, *filter, findOptions)
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
+	cur, err := collection.Find(ctx, *filter, findOptions)
 	if err != nil {
 		return
 	}
 	defer func() {
-		e := cur.Close(*db.Context)
+		e := cur.Close(ctx)
 		if e != nil {
 			err = e
 		}
@@ -146,15 +149,26 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
 	var limit int64 = 1
-	cur, err := collection.Find(*db.Context, filter, &options.FindOptions{
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
+	cur, err := collection.Find(ctx, filter, &options.FindOptions{
 		Limit: &limit,
 	})
 	if err != nil {
 		err = errors.HandleError(err)
 		return
 	}
+	defer func() {
+		e := cur.Close(ctx)
+		if e != nil {
+			err = e
+		}
+	}()
+
 	found := false
-	for cur.Next(*db.Context) {
+	for cur.Next(ctx) {
 		err = cur.Decode(model)
 		if err != nil {
 			return
@@ -205,7 +219,7 @@ func (handler *DbHandler) Exists(request models.IRequest) (exists bool, err erro
 	ms := handler.GetModelsInstance()
 	collection := db.GetCollection(ms)
 	go handler.countDocuments(db, collection, filter, done, &totalCount)
-	<- done
+	<-done
 	exists = totalCount > 0
 	return
 }
@@ -241,7 +255,7 @@ func (handler *DbHandler) Count(request models.IRequest) (count uint64, err erro
 	ms := handler.GetModelsInstance()
 	collection := db.GetCollection(ms)
 	go handler.countDocuments(db, collection, filter, done, &count)
-	<- done
+	<-done
 
 	return
 }

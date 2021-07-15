@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -13,12 +14,6 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		e := db.Close()
-		if e != nil {
-			err = e
-		}
-	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -35,6 +30,10 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 				},
 			}))
 	}
+
+	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	defer cancel()
+
 	if config.SetFlagOnDelete && *handler.SetFlagOnDelete {
 		improveFilter(filter, nil)
 		update := bson.M{
@@ -43,7 +42,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 				"deleted_at": time.Now().UTC(),
 			},
 		}
-		result, err := collection.UpdateOne(*db.Context, filter, update)
+		result, err := collection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return errors.HandleError(err)
 		}
@@ -51,7 +50,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 			return errors.GetError(request, errors.NotFoundError)
 		}
 	} else {
-		result, err := collection.DeleteOne(*db.Context, filter)
+		result, err := collection.DeleteOne(ctx, filter)
 		if err != nil {
 			return errors.HandleError(err)
 		}
