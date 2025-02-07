@@ -3,13 +3,14 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"math"
+
 	"github.com/go-ginger/helpers"
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"math"
 )
 
 func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, filter *bson.M,
@@ -94,7 +95,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 			err = e
 		}
 	}()
-	queryResult := handler.GetModelsInstancePtr()
+	queryResult := handler.GetModelsInstance()
 	for cur.Next(*db.Context) {
 		model := handler.GetModelInstance()
 		err = cur.Decode(model)
