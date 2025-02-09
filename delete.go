@@ -2,18 +2,25 @@ package mongo
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"go.mongodb.org/mongo-driver/bson"
-	"time"
 )
 
-func (handler *DbHandler) Delete(request models.IRequest) error {
-	db, err := GetDb()
+func (handler *DbHandler) Delete(request models.IRequest) (err error) {
+	db, err := handler.GetDb()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		e := handler.pool.CloseConnection(db.Client)
+		if e != nil {
+			err = e
+		}
+	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -31,7 +38,7 @@ func (handler *DbHandler) Delete(request models.IRequest) error {
 			}))
 	}
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	if config.SetFlagOnDelete && *handler.SetFlagOnDelete {

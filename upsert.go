@@ -47,11 +47,17 @@ func (handler *DbHandler) getInsertOnlyFields(model interface{}) []string {
 	return onlyInsertFields
 }
 
-func (handler *DbHandler) Upsert(request models.IRequest) error {
-	db, err := GetDb()
+func (handler *DbHandler) Upsert(request models.IRequest) (err error) {
+	db, err := handler.GetDb()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		e := handler.pool.CloseConnection(db.Client)
+		if e != nil {
+			err = e
+		}
+	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -102,7 +108,7 @@ func (handler *DbHandler) Upsert(request models.IRequest) error {
 		)
 	}
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	doUpsert := true

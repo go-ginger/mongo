@@ -2,15 +2,29 @@ package mongo
 
 import (
 	"bytes"
+	"reflect"
+	"strings"
+
 	"github.com/go-ginger/dl"
 	"github.com/jinzhu/inflection"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"reflect"
-	"strings"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type DbHandler struct {
 	dl.BaseDbHandler
+	pool *MongoPool
+}
+
+func (handler *DbHandler) Initialize(h dl.IBaseDbHandler, model interface{}) {
+	handler.pool = &MongoPool{
+		pool:        make(chan *mongo.Client, config.MaxPoolSize),
+		connections: 0,
+		timeout:     config.Timeout,
+		uri:         config.ConnectionString,
+		poolSize:    int(config.MinPoolSize),
+	}
+	h.GetBaseDbHandler().Initialize(h, model)
 }
 
 func (handler *DbHandler) IdEquals(id1 interface{}, id2 interface{}) bool {

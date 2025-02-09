@@ -21,8 +21,8 @@ type Config struct {
 	TimeoutMs int64
 	Timeout   time.Duration
 
-	MinPoolSize uint64
-	MaxPoolSize uint64
+	MinPoolSize int
+	MaxPoolSize int
 }
 
 var config Config
@@ -49,18 +49,18 @@ func InitializeConfig(input interface{}) {
 		timeoutMs = 5000
 	}
 
-	var minPoolSize uint64
+	var minPoolSize int
 	poolSize := v.FieldByName("minPoolSize")
 	if poolSize.IsValid() {
-		minPoolSize = poolSize.Uint()
+		minPoolSize = int(poolSize.Int())
 	}
 	if minPoolSize == 0 {
 		minPoolSize = 10
 	}
-	var maxPoolSize uint64
+	var maxPoolSize int
 	poolSize = v.FieldByName("maxPoolSize")
 	if poolSize.IsValid() {
-		maxPoolSize = poolSize.Uint()
+		maxPoolSize = int(poolSize.Int())
 	}
 	if maxPoolSize == 0 {
 		maxPoolSize = 50
@@ -72,6 +72,7 @@ func InitializeConfig(input interface{}) {
 		CollectionNamer:  getCollectionName,
 		SetFlagOnDelete:  setFlagOnDelete,
 		TimeoutMs:        timeoutMs,
+		MinPoolSize:      minPoolSize,
 		MaxPoolSize:      maxPoolSize,
 	}
 	config.Timeout = time.Millisecond * time.Duration(config.TimeoutMs)

@@ -3,17 +3,24 @@ package mongo
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (handler *DbHandler) Update(request models.IRequest) error {
-	db, err := GetDb()
+func (handler *DbHandler) Update(request models.IRequest) (err error) {
+	db, err := handler.GetDb()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		e := handler.pool.CloseConnection(db.Client)
+		if e != nil {
+			err = e
+		}
+	}()
 	req := request.GetBaseRequest()
 	model := handler.GetModelInstance()
 	collection := db.GetCollection(model)
@@ -67,7 +74,7 @@ func (handler *DbHandler) Update(request models.IRequest) error {
 		update = doc
 	}
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	result, err := collection.UpdateOne(ctx, filter, update)

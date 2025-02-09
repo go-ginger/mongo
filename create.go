@@ -9,13 +9,19 @@ import (
 
 func (handler *DbHandler) Insert(request models.IRequest) (result models.IBaseModel, err error) {
 	req := request.GetBaseRequest()
-	db, err := GetDb()
+	db, err := handler.GetDb()
 	if err != nil {
 		return
 	}
+	defer func() {
+		e := handler.pool.CloseConnection(db.Client)
+		if e != nil {
+			err = e
+		}
+	}()
 	collection := db.GetCollection(req.Body)
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	res, err := collection.InsertOne(ctx, req.Body)

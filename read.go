@@ -13,10 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (handler *DbHandler) countDocuments(db *DB, collection *mongo.Collection, filter *bson.M,
+func (handler *DbHandler) countDocuments(db *DB,
+	collection *mongo.Collection, filter *bson.M,
 	done chan bool, count *uint64, opts ...*options.CountOptions) {
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	total, err := collection.CountDocuments(ctx, filter, opts...)
@@ -37,10 +38,17 @@ func (handler *DbHandler) NormalizeFilter(filters *models.Filters) (err error) {
 }
 
 func (handler *DbHandler) Paginate(request models.IRequest) (result *models.PaginateResult, err error) {
-	db, err := GetDb()
+	db, err := handler.GetDb()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		e := handler.pool.CloseConnection(db.Client)
+		if e != nil {
+			err = e
+		}
+	}()
+
 	req := request.GetBaseRequest()
 
 	var filter *bson.M
@@ -82,7 +90,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 		findOptions.SetSort(sort)
 	}
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	cur, err := collection.Find(ctx, *filter, findOptions)
@@ -96,7 +104,7 @@ func (handler *DbHandler) Paginate(request models.IRequest) (result *models.Pagi
 		}
 	}()
 	queryResult := handler.GetModelsInstance()
-	for cur.Next(*db.Context) {
+	for cur.Next(db.Context) {
 		model := handler.GetModelInstance()
 		err = cur.Decode(model)
 		if err != nil {
@@ -137,12 +145,12 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	var f map[string]interface{} = *req.Filters
 	filter, err = getBsonDocument(&f)
 	improveFilter(filter, nil)
-	db, err := GetDb()
+	db, err := handler.GetDb()
 	if err != nil {
 		return
 	}
 	defer func() {
-		e := db.Close()
+		e := handler.pool.CloseConnection(db.Client)
 		if e != nil {
 			err = e
 		}
@@ -151,7 +159,7 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 	collection := db.GetCollection(model)
 	var limit int64 = 1
 
-	ctx, cancel := context.WithTimeout(*db.Context, config.Timeout)
+	ctx, cancel := context.WithTimeout(db.Context, config.Timeout)
 	defer cancel()
 
 	cur, err := collection.Find(ctx, filter, &options.FindOptions{
@@ -189,12 +197,12 @@ func (handler *DbHandler) Get(request models.IRequest) (result models.IBaseModel
 }
 
 func (handler *DbHandler) Exists(request models.IRequest) (exists bool, err error) {
-	db, err := GetDb()
+	db, err := handler.GetDb()
 	if err != nil {
 		return false, err
 	}
 	defer func() {
-		e := db.Close()
+		e := handler.pool.CloseConnection(db.Client)
 		if e != nil {
 			err = e
 		}
@@ -226,12 +234,12 @@ func (handler *DbHandler) Exists(request models.IRequest) (exists bool, err erro
 }
 
 func (handler *DbHandler) Count(request models.IRequest) (count uint64, err error) {
-	db, err := GetDb()
+	db, err := handler.GetDb()
 	if err != nil {
 		return 0, err
 	}
 	defer func() {
-		e := db.Close()
+		e := handler.pool.CloseConnection(db.Client)
 		if e != nil {
 			err = e
 		}
