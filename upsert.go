@@ -2,12 +2,13 @@ package mongo
 
 import (
 	"context"
+	"reflect"
+	"strings"
+
 	"github.com/go-ginger/models"
 	"github.com/go-ginger/models/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
-	"strings"
 )
 
 func (handler *DbHandler) getInsertOnlyFields(model interface{}) []string {
