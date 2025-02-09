@@ -26,3 +26,7 @@ func (handler *DbHandler) GetDb() (db *DB, err error) {
 	}
 	return &DB{conn, ctx}, nil
 }
+
+func (handler *DbHandler) Close(db *DB) error {
+	return handler.pool.CloseConnection(db.Client)
+}
